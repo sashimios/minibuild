@@ -2,7 +2,9 @@
 
 We want to make a more KISS port of [AOSC-Dev/autobuild3](https://github.com/AOSC-Dev/autobuild3) from AOSC.
 
-If things go well, we will move some complexity of package building from Diel to Minibuild.
+If things go well, we will move some complexity of package building from
+[Diel](https://github.com/sashimios/spm-bash/tree/master/src/diel)
+to this project.
 
 
 

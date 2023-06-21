@@ -28,6 +28,8 @@ function real_build() {
     ### Load default runtime config
     # source "$MINIBUILD_DIR/static/misc/ab3_defcfg.sh"
 
+    [[ -e "$MASTER_DIR"/meta/autobuild/prepare ]] && source "$MASTER_DIR"/meta/autobuild/prepare
+
     ### Use a separate build dir?
     [[ -z $ABSHADOW ]] && ABSHADOW=1
     if bool "$ABSHADOW"; then

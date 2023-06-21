@@ -44,7 +44,7 @@ log_info "Ready to build package $pkg_id"
 
 ### Load class-specific functions
 [[ -z "$DIEL_CLASS" ]] && DIEL_CLASS=std
-if [[ "$DIEL_CLASS" == "special" ]]; then
+if [[ "$DIEL_CLASS" == "special" ]] || [[ -e "$MASTER_DIR/meta/autobuild/build" ]]; then
     source "$(dirname "$spec_path")"/dbuild.sh
 else
     source "/usr/local/lib/minibuild/static/class/$DIEL_CLASS.sh"

@@ -26,4 +26,4 @@ fi
 
 
 log_info "Writing meta info into '$MASTER_DIR/output/DEBIAN/control'"
-cat "$1" > "$MASTER_DIR/output/DEBIAN/control"
+dpkgctrl > "$MASTER_DIR/output/DEBIAN/control"

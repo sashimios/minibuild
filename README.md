@@ -13,7 +13,7 @@ to this project.
 ## Installation
 
 ```
-make install_local
+./make.sh install_local
 ```
 
 This will install the entire `static` directory as `/usr/local/lib/minibuild/static`.

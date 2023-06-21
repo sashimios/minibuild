@@ -20,6 +20,13 @@ export MINIBUILD_DIR="/usr/local/lib/minibuild"  # Prefer manual installation
 
 
 
+for src in "$MINIBUILD_DIR/static/ab3lib/"*.sh; do
+    source "$src"
+done
+
+
+
+
 
 ### Load configuration
 CONF=/etc/diel/make.conf
@@ -28,6 +35,8 @@ CONF=/etc/diel/make.conf
 cd "$MASTER_DIR"
 export DESTDIR="$MASTER_DIR/output"
 
+
+### Load package metadata
 source "$spec_path"  # Security implications...
 source "$(dirname "$spec_path")"/autobuild/defines
 [[ -e "$(dirname "$spec_path")"/dbuild.sh ]] && source "$(dirname "$spec_path")"/dbuild.sh

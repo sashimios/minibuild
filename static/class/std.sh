@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 function src_unpack() {
     log_info "Entering 'src_unpack'"
     cd "$MASTER_DIR/work"
@@ -16,7 +18,34 @@ function real_build() {
     else
         cd $(ls | head -n1)
     fi
-    ./configure $AUTOTOOLS_AFTER
+
+    ### Borrowed from Autobuild3
+    export SRCDIR="$PWD"
+    export BLDDIR="$SRCDIR/abbuild"
+    export PKGDIR="$SRCDIR/abdist"
+    export SYMDIR="$SRCDIR/abdist-dbg"
+
+    ### Load default runtime config
+    # source "$MINIBUILD_DIR/static/misc/ab3_defcfg.sh"
+
+    ### Use a separate build dir?
+    [[ -z $ABSHADOW ]] && ABSHADOW=1
+    if bool "$ABSHADOW"; then
+        pwd
+		log_info "Creating directory for shadow build ..."
+		mkdir -pv "$BLDDIR" \
+			|| die "Failed to create shadow build directory: $?."
+		cd "$BLDDIR" \
+			|| die "Failed to enter shadow build directory: $?."
+        pwd
+        ../configure $AUTOTOOLS_AFTER || die "Configure phase error"
+	else
+        ### Build in repo root
+        pwd
+        ./configure $AUTOTOOLS_AFTER || die "Configure phase error"
+	fi
+
+    ### Work with Makefile
     if [[ -z "$MAKE_TARGETS" ]]; then
         for target in $MAKE_TARGETS; do
             make "$target"

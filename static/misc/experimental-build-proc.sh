@@ -1,4 +1,7 @@
-
+# ======================================================================
+# This procedure was used for experimental purposes only.
+# Now we only use `ab3-proc.sh`.
+# ======================================================================
 
 ### Determine ABTYPE
 cd "$SRCDIR"

@@ -17,8 +17,8 @@ done
 
 
 
-source "$spec_path"
-source "$(dirname "$spec_path")"/autobuild/defines
+source "$MASTER_DIR/meta/spec"
+source "$MASTER_DIR/meta/autobuild/defines"
 if [[ -z "$REL" ]]; then
     REL=0
 fi

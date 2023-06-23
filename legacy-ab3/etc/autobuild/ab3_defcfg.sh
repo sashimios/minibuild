@@ -151,11 +151,11 @@ GOFLAGS+=" -trimpath"      # Required for eproducible build.
 GOFLAGS+=" -modcacherw"    # Ensures that go modules creates a write-able path.
 GOFLAGS+=" -buildmode=pie" # Hardening binary.
 
-# # Old, default.
-# [[ -d "$AB"/etc/autobuild/defaults ]] && recsr "$AB"/etc/autobuild/defaults/*!(.dpkg*|dist)
+# Old, default.
+[[ -d "$AB"/etc/autobuild/defaults ]] && recsr "$AB"/etc/autobuild/defaults/*!(.dpkg*|dist)
 
-# . "$AB"/etc/autobuild/ab3cfg.sh
-# [[ -d "$AB"/etc/autobuild/ab3cfg.d ]] && recsr "$AB"/etc/autobuild/ab3cfg.d/*!(.dpkg*|dist)
+. "$AB"/etc/autobuild/ab3cfg.sh
+[[ -d "$AB"/etc/autobuild/ab3cfg.d ]] && recsr "$AB"/etc/autobuild/ab3cfg.d/*!(.dpkg*|dist)
 
 if bool $ABSTAGE2; then
 	abwarn "Autobuild3 running in stage2 mode ..."

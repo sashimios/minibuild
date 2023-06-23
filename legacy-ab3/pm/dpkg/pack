@@ -1,0 +1,125 @@
+#!/bin/bash
+##dpkg/pack: Makes a dpkg package.
+##@copyright GPL-2.0+
+# dpkg field helper.
+_ab_pm_func+='dpkgfield dpkgpkgver dpkgctrl '
+dpkgfield(){ echo -ne "$1: "; shift; pm_depcom "$@"; echo; }
+dpkgpkgver(){
+	((PKGEPOCH)) && echo -n "$PKGEPOCH":
+	echo -n "$PKGVER"
+	if [ "$PKGREL" == 0 ]; then
+		:
+	else
+		echo "-$PKGREL"
+	fi
+}
+
+dpkgctrl(){
+	local arch="${ABHOST%%\/*}"
+	[[ "$arch" == noarch ]] && arch=all
+	echo "Package: $PKGNAME"
+	echo "Version: $(dpkgpkgver)"
+	echo "Architecture: $arch"
+	[ "$PKGSEC" ] && echo "Section: $PKGSEC"
+	echo "Maintainer: $MTER"
+	echo "Installed-Size: $(du -s ""$PKGDIR"" | cut -f 1)"
+	echo "Description: $PKGDES"
+	if ((PKGESS)); then
+		echo "Essential: yes"
+	else
+		echo "Essential: no"
+	fi
+	[ "$PKGDEP" ] && dpkgfield Depends $PKGDEP
+	VER_NONE=1 # We don't autofill versions in optional fields
+	[ "$PKGRECOM" ] && dpkgfield Recommends $PKGRECOM
+	[ "$PKGREP" ] && dpkgfield Replaces $PKGREP
+	[ "$PKGCONFL" ] && dpkgfield Conflicts $PKGCONFL
+	[ "$PKGPROV" ] && VER_NONE=1 dpkgfield Provides $PKGPROV
+	[ "$PKGSUG" ] && dpkgfield Suggests $PKGSUG
+	[ "$PKGBREAK" ] && dpkgfield Breaks $PKGBREAK
+	if [ -e "$SRCDIR"/autobuild/extra-dpkg-control ]; then
+		cat "$SRCDIR"/autobuild/extra-dpkg-control
+	fi
+	# Record last packager in control, we will switch to another variable
+	# name for this field to differentiate between maintainers and
+	# packagers for specific packages.
+	echo "X-AOSC-Packager: $MTER"
+	if dpkg -l autobuild3 >/dev/null 2>&1; then
+		echo "X-AOSC-Autobuild3-Version: $(dpkg-query -f '${Version}' -W autobuild3)"
+	fi
+	echo "$DPKGXTRACTRL"
+}
+
+dpkgctrl_dbg_sym() {
+	local arch="${ABHOST%%\/*}"
+	[[ "$arch" == noarch ]] && arch=all
+	echo "Package: $PKGNAME-dbg"
+	echo "Version: $(dpkgpkgver)"
+	echo "Architecture: $arch"
+	echo "Section: debug"
+	echo "Maintainer: $MTER"
+	echo "Installed-Size: $(du -s $SYMDIR | cut -f 1)"
+	echo "Description: Debug symbols for $PKGNAME"
+	echo "Depends: ${PKGNAME} (=$(dpkgpkgver))"
+	# Record last packager in control, we will switch to another variable
+	# name for this field to differentiate between maintainers and
+	# packagers for specific packages.
+	echo "X-AOSC-Packager: $MTER"
+	if dpkg -l autobuild3 >/dev/null 2>&1; then
+		echo "X-AOSC-Autobuild3-Version: $(dpkg-query -f '${Version}' -W autobuild3)"
+	fi
+	echo "$DPKGXTRACTRL"
+}
+
+# Auto-select xz level, use lower compression level on "Retro" architectures.
+if [[ "$ARCH" = "i586" || "$ARCH" = "powerpc" || "$ARCH" = "ppc64" ]]; then
+	DPKGDEBCOMP+="-Zxz -z3"
+else
+	DPKGDEBCOMP+="-Zxz -z6"
+fi
+
+instSIZE=$(du -s "$PKGDIR" | cut -f 1)
+
+mkdir -p "$PKGDIR"/DEBIAN \
+	|| abdie "Failed to create DEBIAN directory for .deb metadata: $?."
+cp -rl "$SRCDIR"/abscripts/* "$PKGDIR"/DEBIAN \
+	|| abdie "Failed to copy .deb scripts: $?."
+# Do not handle conffiles in stage2.
+if ! bool $ABSTAGE2; then
+	if [ -e "$SRCDIR/autobuild/$ARCH/conffiles" ]; then
+		cp -l "$SRCDIR"/autobuild/"$ARCH"/conffiles "$PKGDIR"/DEBIAN 2>/dev/null \
+			|| abdie "Failed to copy conffiles: $?."
+	elif [ -e "$SRCDIR/autobuild/conffiles" ]; then
+		cp -l "$SRCDIR"/autobuild/conffiles "$PKGDIR"/DEBIAN 2>/dev/null \
+			|| abdie "Failed to copy conffiles: $?."
+	fi
+fi
+if [ -e "$SRCDIR/autobuild/triggers" ]; then
+	cp -l "$SRCDIR"/autobuild/triggers "$PKGDIR"/DEBIAN 2>/dev/null \
+		|| abdie "Failed to copy triggers: $?."
+fi
+dpkgctrl > "$PKGDIR"/DEBIAN/control \
+	|| abdie "Failed to generate .deb control metadata: $?."
+dpkg-deb $DPKGDEBCOMP -b "$PKGDIR" "${PKGNAME}_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb" \
+	|| abdie "Failed to package .deb package: $?."
+mv "$PKGDIR"/DEBIAN "$SRCDIR"/ab-dpkg
+
+if bool "$ABSPLITDBG"; then
+	# Check whether there are any symbol files getting genereted
+	if [[ -d "${SYMDIR}" ]] && [ "$(ls -A $SYMDIR)" ]; then
+		# Actually pack them
+		mkdir -p "$SYMDIR"/DEBIAN \
+			|| abdie "Failed to create DEBIAN directory for -dbg .deb metadata: $?."
+		dpkgctrl_dbg_sym > "$SYMDIR"/DEBIAN/control \
+			|| abdie "Failed to generate -dbg .deb control metadata: $?."
+		dpkg-deb $DPKGDEBCOMP -b "$SYMDIR" "${PKGNAME}-dbg_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb" \
+			|| abdie "Failed to build debug .deb package: $?."
+		export ABPACKAGE+="${PKGNAME}-dbg_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb "
+	else
+		abdie "ABSPLITDBG is set, but we can't find any symbol files."
+		abdie "Cannot build symbol package."
+		ABSPLITDBG=0
+	fi
+fi
+
+export ABPACKAGE+="${PKGNAME}_${PKGVER}-${PKGREL}_${ABHOST%%\/*}.deb "

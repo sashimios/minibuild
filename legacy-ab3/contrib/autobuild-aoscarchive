@@ -1,0 +1,38 @@
+#!/bin/bash
+# aoscarchive: default autobuild settings for os3-repo archiving
+##@copyright GPL-2.0+
+# THIS SCRIPT IS INTENDED FOR USE INSIDE AUTOBUILD, WITH EXPORTED VATIABLES, LIKE AB, ARCH.
+# SYNTAX: autobuild abrepoarchive PKGNAME PKGVER PKGREL
+# CURRENTLY DEFINED PKGMGRs: dpkg.
+
+# Directory Tree with priorities.
+DIR_TREE="a b c d e f g h i j k m n o p q r s t u v w x y z
+	liba libb libc libd libe libf libg libh libi libj libk libl libm libn libo
+	libp libq libr libs libt libu libv libw libx liby libz l 0 1 2 3 4 5 6 7 8 9 _UNSORTED
+        A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"
+
+TREE=1
+TARGET_DIR=/debs
+
+# Functions, etc. ABSET, AB as exported by autobuild. ARCH as exported.
+. "$AB"/lib/base.sh >/dev/null 2>&1
+
+# Make it architecturally aware.
+. "$AB"/lib/arch.sh >/dev/null 2>&1
+. "$AB"/arch/_common.sh >/dev/null 2>&1
+
+mvln(){	# not using cp -s because we want the main part to be in the target
+	mv "$1" "$2" || aberr "Move from [$1] to [$2] failed: $?"
+	ln -s "$2" "$1" || aberr "Link from [$2] to [$1] failed: $?"
+}
+
+if [ "$TREE" == 1 ];
+then
+	for _layout in {a..k} lib{a..z} {l..z} {0..9} _UNSORTED; do [[ $1 == "$_layout"* ]] && break; done || abwarn "$1 NOT SORTED"
+else
+	abinfo "Not using an alphabetical tree."
+fi
+
+# in place
+mkdir -p "$TARGET_DIR"/"$_layout"
+cp -v "$PWD/$1_$2-$3_$4.deb" "$TARGET_DIR/$_layout"

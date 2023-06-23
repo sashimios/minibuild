@@ -2,25 +2,19 @@
 
 
 
-function src_unpack() {
-    log_info "Entering 'src_unpack'"
-    cd "$MASTER_DIR/work"
-    for tar in "$MASTER_DIR"/fetch/*.tar*; do
-        tar -pxf "$tar"
-    done
-}
 
 function real_build() {
     log_info "Entering 'real_build'"
     cd "$MASTER_DIR/work"
     if [[ -d "$SUBDIR" ]]; then
-        cd "$SUBDIR"
+        SRCDIR="$MASTER_DIR/work/$SUBDIR"
     else
-        cd $(ls | head -n1)
+        SRCDIR="$MASTER_DIR/work/$(ls | head -n1)"
     fi
+    cd "$SRCDIR"
 
-    ### Borrowed from Autobuild3
-    export SRCDIR="$PWD"
+    ### Borrowed variables from Autobuild3
+    # export SRCDIR="$PWD"
     export BLDDIR="$SRCDIR/abbuild"
     export PKGDIR="$SRCDIR/abdist"
     export SYMDIR="$SRCDIR/abdist-dbg"
@@ -55,12 +49,11 @@ function real_build() {
     else
         make all
     fi
-    make install DESTDIR="$MASTER_DIR/output" || die "Cannot run 'make install'. Permission problem?"
+    make install $MAKE_AFTER DESTDIR="$MASTER_DIR/output" || die "Cannot run 'make install'. Permission problem?"
 }
 
 ### Entry function
 function start_building() {
-    src_unpack
     real_build
 }
 

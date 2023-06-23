@@ -50,14 +50,68 @@ source "$MINIBUILD_DIR/legacy-ab3/etc/autobuild/ab3_defcfg.sh"
 source "$MASTER_DIR/meta/spec"
 source "$MASTER_DIR/meta/autobuild/defines"
 
-### Extra stuff...
-log_info "var LDFLAGS_COMMON: $LDFLAGS_COMMON"
+
+
+
+### Alternative: 10-core_defines.sh
+function altproc-10-core_defines() {
+    abrequire arch
+    . "$AB/arch/_common.sh"
+    . "$AB/arch/${ABHOST//\//_}.sh" # Also load overlay configuration.
+    BUILD=${ARCH_TARGET["$ABBUILD"]}
+    HOST=${ARCH_TARGET["$ABHOST"]}
+
+    [[ ${ABHOST%%\/*} != $FAIL_ARCH ]] ||
+        abdie "This package cannot be built for $FAIL_ARCH, e.g. $ABHOST."
+
+    if ! bool $ABSTRIP && bool $ABSPLITDBG; then
+        abwarn "QA: ELF stripping is turned OFF."
+        abwarn "    Won't package debug symbols as they are shipped in ELF themselves."
+        ABSPLITDBG=0
+    fi
+
+    if [[ $ABHOST == noarch ]]; then
+        abinfo "Architecture-agnostic (noarch) package detected, disabling -dbg package split ..."
+        ABSPLITDBG=0
+    fi
+
+    arch_initcross
+    # PKGREL Parameter, pkg and rpm friendly
+    # Test used for those who wants to override.
+    # TODO foreport verlint
+    # TODO verlint backwriting when ((!PROGDEFINE)).
+    # TODO automate $PKG* namespace and remove abbs `spec`
+    if [ ! "$PKGREL" ]; then
+        PKGVER=$(echo $PKGVER| rev | cut -d - -f 2- | rev)
+        PKGREL=$(echo $PKGVER | rev | cut -d - -f 1 | rev)
+        if [ "$PKGREL" == "$PKGVER" ] || [ ! "$PKGREL" ]; then PKGREL=0; fi;
+    fi
+
+    # Programmable modules should be put here.
+    arch_loadfile functions
+
+    export `cat $AB/exportvars/*`
+
+    export PYTHON=/usr/bin/python2
+}
 
 
 ### Iterate through all...
+cd "$SRCDIR"
+altproc-10-core_defines
 for proc in $ab3_proc_list; do
     if [[ "$proc" != '#'* ]]; then
         log_info "Entering proc: $proc"
         source "$MINIBUILD_DIR/legacy-ab3/proc/$proc"
     fi
 done
+log_info ls "$MASTER_DIR/work/"*"/abdist/"
+ls "$MASTER_DIR/work/"*"/abdist/"
+ls "$PKGDIR"
+rsync -avp --delete --mkpath "$PKGDIR/" "$MASTER_DIR/output/"
+
+
+
+
+### Extra stuff...
+log_info "var LDFLAGS_COMMON: $LDFLAGS_COMMON"

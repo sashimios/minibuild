@@ -41,15 +41,15 @@ export LANG=C.UTF8
 
 
 ### Autobuild3 compatibility layer
-source "$MINIBUILD_DIR/static/misc/ab3-polyfill.sh"
 export AB="$MINIBUILD_DIR/legacy-ab3"
-ABBLPREFIX="$AB/lib"
+source "$MINIBUILD_DIR/static/misc/ab3-polyfill.sh"
 ABMPM=dpkg  # Your main PM
 ABAPMS=  # Other PMs
-MTER="Null Packager <null@aosc.xyz>"
+MTER="$USER <$USER@$HOSTNAME>"
 ABINSTALL=dpkg
+
 ### Autobuild3 libraries
-for src in "$MINIBUILD_DIR/legacy-ab3/lib"/{diag,base,builtins,arch,pm}.sh; do
+for src in "$MINIBUILD_DIR/legacy-ab3/lib"/{diag,base,builtins}.sh; do
     log_info "Loading legacy-ab3 library: $src"
     source "$src"
 done
@@ -61,16 +61,13 @@ done
 
 
 ### Load ABTYPE support
-for src in "$MINIBUILD_DIR/static/abtypes"/*.sh; do
-    log_info "Loading legacy-ab3 ABTYPE runtime: $src"
-    source "$src"
-done
+### Note: Now we leave this problem to `ab3-proc.sh` which loads build class scripts from legacy-ab3
+# for src in "$MINIBUILD_DIR/static/abtypes"/*.sh; do
+#     log_info "Loading legacy-ab3 ABTYPE runtime: $src"
+#     source "$src"
+# done
 
 ### Determine SRCDIR
-# cd "$MASTER_DIR"
-# export SRCDIR="$PWD/work"
-# exit 0
-
 export SRCDIR="$MASTER_DIR/work"
 if [[ -d "$SUBDIR" ]]; then
     export SRCDIR="$MASTER_DIR/work/$SUBDIR"
@@ -108,11 +105,9 @@ log_info "Ready to build package $pkg_id"
 # Enter the build procedure...
 # ========================================================
 source "$MINIBUILD_DIR/static/misc/ab3-proc.sh"
-# source "$MINIBUILD_DIR/static/misc/experimental-build-proc.sh"
 
 
 
 
 
-### Preparation works for the next stage
-mkdir -p "$MASTER_DIR/output/DEBIAN"
+

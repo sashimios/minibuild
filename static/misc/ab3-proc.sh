@@ -50,6 +50,10 @@ source "$MINIBUILD_DIR/legacy-ab3/etc/autobuild/ab3_defcfg.sh"
 source "$MASTER_DIR/meta/spec"
 source "$MASTER_DIR/meta/autobuild/defines"
 
+### Extra stuff...
+log_info "var LDFLAGS_COMMON: $LDFLAGS_COMMON"
+
+
 ### Iterate through all...
 for proc in $ab3_proc_list; do
     if [[ "$proc" != '#'* ]]; then

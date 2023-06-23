@@ -2,11 +2,10 @@
 
 Minibuild is a collection of portable build scripts made for various classes of software packages.
 
-Inspired by [AOSC-Dev/autobuild3](https://github.com/AOSC-Dev/autobuild3).
+Designed as a runtime library for
+[Diel](https://github.com/sashimios/spm-bash/tree/master/src/diel).
 
-If things go well, we will move some complexity of package building from
-[Diel](https://github.com/sashimios/spm-bash/tree/master/src/diel)
-to this project.
+Inspired by [AOSC-Dev/autobuild3](https://github.com/AOSC-Dev/autobuild3).
 
 
 

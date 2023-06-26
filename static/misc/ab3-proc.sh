@@ -15,7 +15,7 @@ abdie() {
 
 
 ab3_proc_list="
-#00-python_defines.sh
+00-python_defines.sh
 #10-core_defines.sh
 10-env-setup.sh
 #10-qa_pre_build.sh
@@ -99,6 +99,16 @@ function altproc-10-core_defines() {
 ### Iterate through all...
 cd "$SRCDIR"
 altproc-10-core_defines
+
+alias python=python2
+export python
+
+# function make() {
+#     echo make "$@"
+#     $(which make) "$@"
+# }
+# export -f make
+
 for proc in $ab3_proc_list; do
     if [[ "$proc" != '#'* ]]; then
         log_info "Entering proc: $proc"
